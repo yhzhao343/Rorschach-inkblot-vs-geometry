@@ -1,0 +1,35 @@
+{
+  "name": "rorschach-inkblot-vs-geometry",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/yhzhao343/Rorschach-inkblot-vs-geometry#readme",
+  "bugs": {
+    "url": "https://github.com/yhzhao343/Rorschach-inkblot-vs-geometry/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yhzhao343/Rorschach-inkblot-vs-geometry.git"
+  },
+  "license": "ISC",
+  "author": "Yuhui Zhao",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "add-coi": "esbuild node_modules/coi-serviceworker/coi-serviceworker.js --minify --outfile=./src/coi-serviceworker.min.js && cp ./src/coi-serviceworker.min.js ./build/coi-serviceworker.min.js",
+    "cp-file": "mkdir -p build && cp src/index.html build/ && cp -r src/styles build/ && cp src/favicon.ico build/ && cp node_modules/@spectre-org/spectre-css/dist/spectre.min.css build/styles/ && cp node_modules/@spectre-org/spectre-css/dist/spectre-icons.min.css build/styles",
+    "build": "npm run cp-file && npm run add-coi && esbuild src/index.ts --bundle --outfile=build/index.js --sourcemap --define:window.IS_PRODUCTION=true --allow-overwrite --format=esm --minify --tree-shaking=true",
+    "serve": "esbuild --servedir=build",
+    "dev": "npm run cp-file && npm run add-coi && esbuild src/index.ts --bundle --outfile=build/index.js --sourcemap --define:window.IS_PRODUCTION=false --watch --servedir=build --allow-overwrite --format=esm",
+    "predeploy": "npm run build"
+  },
+  "dependencies": {
+    "@spectre-org/spectre-css": "^1.2.0",
+    "coi-serviceworker": "^0.1.7",
+    "pixi.js": "^8.14.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10",
+    "gh-pages": "^6.3.0"
+  }
+}

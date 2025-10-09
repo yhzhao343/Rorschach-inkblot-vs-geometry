@@ -1,0 +1,41 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    display: block;
+}
+
+div.control-panel-div {
+    background-color: #e5e5e5;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    height: 20vh;
+    position: relative;
+    top: 40vh;
+}
+
+div.flat-form {
+    display: flex;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+.inline-block {
+    display: inline-block;
+}
+/*
+.form-label.label-xlg {
+    font-size: 1.6rem;
+    height: 2.4rem;
+    padding: 0.1rem 0.1rem;
+}
+
+.form-input.input-xlg {
+    font-size: 1.6rem;
+    height: 2.8rem;
+    padding: 0.1rem 0.1rem;
+}*/

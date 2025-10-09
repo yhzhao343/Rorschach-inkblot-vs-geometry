@@ -1,0 +1,43 @@
+# Node modules
+node_modules/
+.pnp/
+.pnp.cjs
+
+# Build output
+dist/
+build/
+out/
+es/
+lib/
+*.js
+*.d.ts
+*.map
+
+# Dependency lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE-specific files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Test coverage
+coverage/
+
+# Misc
+.DS_Store
+Thumbs.db
