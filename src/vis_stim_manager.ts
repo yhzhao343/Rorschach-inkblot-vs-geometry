@@ -6,7 +6,7 @@ const defaultConfig: VisStimConfig = {
   start_fixation_ms: 1500,
   target_group_ms: 5000,
   ctrl_group_ms: 5000,
-  end_fixation_ms: 1500,
+  end_white_ms: 1500,
   end_baseline_s: 180,
 };
 

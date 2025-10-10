@@ -3,6 +3,6 @@ export interface VisStimConfig {
   start_fixation_ms: number;
   target_group_ms: number;
   ctrl_group_ms: number;
-  end_fixation_ms: number;
+  end_white_ms: number;
   end_baseline_s: number;
 }
