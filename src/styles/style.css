@@ -12,30 +12,43 @@ div.control-panel-div {
     background-color: #e5e5e5;
     align-items: center;
     display: flex;
+    flex-direction: column;
     justify-content: center;
-    height: 20vh;
+    height: 80vh;
     position: relative;
-    top: 40vh;
+    top: 10vh;
 }
 
 div.flat-form {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 0.1rem;
 }
 
+div.flat-flex-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+div.vis-stim-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding-top: 3vh;
+    width: 100vw;
+    padding-left: 5vw;
+    padding-right: 5vw;
+}
+img.fit {
+    max-width: 100%;
+    height: 15vh;
+    display: block;
+}
 .inline-block {
     display: inline-block;
 }
-/*
-.form-label.label-xlg {
-    font-size: 1.6rem;
-    height: 2.4rem;
-    padding: 0.1rem 0.1rem;
-}
-
-.form-input.input-xlg {
-    font-size: 1.6rem;
-    height: 2.8rem;
-    padding: 0.1rem 0.1rem;
-}*/
