@@ -41,8 +41,8 @@ div.vis-stim-row {
     gap: 0.1rem;
     padding-top: 3vh;
     width: 100vw;
-    padding-left: 5vw;
-    padding-right: 5vw;
+    padding-left: 2vw;
+    padding-right: 2vw;
 }
 img.fit {
     max-width: 100%;
@@ -51,4 +51,8 @@ img.fit {
 }
 .inline-block {
     display: inline-block;
+}
+
+div.xscroll {
+    overflow-x: scroll;
 }

@@ -269,7 +269,23 @@ export function prepVisStimCtrlPanel(
     const id_num = vis_stim.children.length;
     const stim_row_div = createDiv(`Vis-stim-${id_num}`, vis_stim, [
       "vis-stim-row",
+      "xscroll",
     ]);
+    // const set_title = document.createElement("h5");
+    // set_title.textContent = `Set ${id_num}: ${files.length} stimulus`;
+    // stim_row_div.appendChild(set_title);
+    const title_card = createDiv(`img-card-${id_num}`, stim_row_div, ["card"]);
+    title_card.setAttribute("style", "width:10vw");
+    const title_header = createDiv(`img-card-header-${id_num}`, title_card, [
+      "card-header",
+    ]);
+    const title_header_content = createDiv(
+      `img-card-header-content-${id_num}`,
+      title_header,
+      ["card-title", "h6"],
+      `Set ${id_num + 1}: ${files.length} stimulus`,
+    );
+
     for (let i = 0; i < files.length; i++) {
       const img_card_id = `${id_num}-${i}`;
       const card = createDiv(`img-card-${img_card_id}`, stim_row_div, ["card"]);
