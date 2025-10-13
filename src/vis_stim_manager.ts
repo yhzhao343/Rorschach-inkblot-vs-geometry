@@ -1,11 +1,11 @@
 import { VisStimConfig } from "./interfaces";
-import { input_style, label_style, objToStyleStr } from "./styles";
+// import { input_style, label_style } from "./styles";
 
 const defaultConfig: VisStimConfig = {
   start_baseline_s: 180,
   start_fixation_ms: 1500,
-  target_group_ms: 5000,
-  ctrl_group_ms: 5000,
+  num_repeat: 3,
+  show_time_ms: 5000,
   end_white_ms: 1500,
   end_baseline_s: 180,
 };
@@ -69,103 +69,86 @@ export function prepVisStimCtrlPanel(
   ]);
   control_panel_div.appendChild(timing_form);
 
-  // const baseline_form_group = createDiv("baseline-form", form, ["form-group"]);
 
   const start_baseline_input_id = "start_baseline_time_s";
   const start_baseline_label = createLabel(
     "start_baseline_time_span",
     timing_form,
     start_baseline_input_id,
-    [],
+    ["xlg-label"],
     "Start Baseline(s):",
   );
-  start_baseline_label.setAttribute("style", objToStyleStr(label_style));
 
   const start_baseline_input = createNumInput(
     start_baseline_input_id,
     timing_form,
-    [],
+    ["xlg-input"],
     30,
     300,
     1,
     start_config.start_baseline_s,
   );
-  start_baseline_input.setAttribute(
-    "style",
-    objToStyleStr({ ...input_style, width: "3em" }),
-  );
+  start_baseline_input.setAttribute("style", "width:3em");
 
   const end_baseline_input_id = "end_baseline_time_s";
   const end_baseline_label = createLabel(
     "end_baseline_time_span",
     timing_form,
     end_baseline_input_id,
-    [],
+    ["xlg-label"],
     "End Baseline(s):",
   );
-  end_baseline_label.setAttribute("style", objToStyleStr(label_style));
 
   const end_baseline_input = createNumInput(
     end_baseline_input_id,
     timing_form,
-    [],
+    ["xlg-input"],
     30,
     300,
     1,
     start_config.start_baseline_s,
   );
-  end_baseline_input.setAttribute(
-    "style",
-    objToStyleStr({ ...input_style, width: "3em" }),
-  );
+  end_baseline_input.setAttribute("style", "width:3em");
 
   const start_fixation_input_id = "start_fixation_time_ms";
   const start_fixation_label = createLabel(
     "start_fixation_time_span",
     timing_form,
     start_fixation_input_id,
-    [],
+    ["xlg-label"],
     "Start Fixation (ms):",
   );
-  start_fixation_label.setAttribute("style", objToStyleStr(label_style));
 
   const start_fixation_input = createNumInput(
     start_fixation_input_id,
     timing_form,
-    [],
+    ["xlg-input"],
     1000,
     10000,
     1,
     start_config.start_fixation_ms,
   );
-  start_fixation_input.setAttribute(
-    "style",
-    objToStyleStr({ ...input_style, width: "3.2em" }),
-  );
+  start_fixation_input.setAttribute("style", "width: 3.2em");
 
   const end_white_input_id = "end_white_time_ms";
   const end_white_label = createLabel(
     "end_white_time_span",
     timing_form,
     end_white_input_id,
-    [],
+    ["xlg-label"],
     "End White (ms):",
   );
-  end_white_label.setAttribute("style", objToStyleStr(label_style));
 
   const end_white_input = createNumInput(
     end_white_input_id,
     timing_form,
-    [],
+    ["xlg-input"],
     1000,
     10000,
     1,
     start_config.end_white_ms,
   );
-  end_white_input.setAttribute(
-    "style",
-    objToStyleStr({ ...input_style, width: "3.2em" }),
-  );
+  end_white_input.setAttribute("style", "width: 3.2em");
 
   start_baseline_input.onchange = (event: Event) => {
     if (event.target) {
@@ -223,28 +206,12 @@ export function prepVisStimCtrlPanel(
     updateSearchURL(start_config);
   };
 
-  const button_style = {
-    display: "block",
-    height: "6vh",
-    "padding-left": "26px",
-    "padding-right": "26px",
-    "font-size": "2em",
-    cursor: "pointer",
-    "text-align": "center",
-    "margin-right": "10px",
-    "border-radius": "3vh",
-    border: "none",
-    color: "white",
-    "font-family": "Arial, sans-serif",
-    "background-color": "#5755d9",
-  };
   const add_vis_stim_in = document.createElement("input");
   add_vis_stim_in.setAttribute("type", "file");
   add_vis_stim_in.setAttribute("id", "vis-stim-upload");
   add_vis_stim_in.setAttribute("style", "display:none");
   add_vis_stim_in.setAttribute("accept", "image/*");
   add_vis_stim_in.multiple = true;
-  // add_vis_stim_in.setAttribute("name", "files[]");
   add_vis_stim_in.onchange = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const files = target.files as FileList;
@@ -254,7 +221,8 @@ export function prepVisStimCtrlPanel(
   };
 
   const add_vis_sim_btn = document.createElement("button");
-  add_vis_sim_btn.setAttribute("style", objToStyleStr(button_style));
+  add_vis_sim_btn.classList.add("xlf-button")
+
   add_vis_sim_btn.innerHTML = "+ Stim Set";
   timing_form.appendChild(add_vis_sim_btn);
   add_vis_sim_btn.onclick = () => {
@@ -264,8 +232,12 @@ export function prepVisStimCtrlPanel(
   const vis_stim = createDiv("vis_stim", control_panel_div, ["flat-flex-col"]);
   vis_stim.setAttribute("style", "width:100%");
   control_panel_div.appendChild(vis_stim);
+  const file_lists: FileList[] = []
 
   function addVisStimSet(files: FileList) {
+    file_lists.push(files);
+    const files_arr = Array.from(files);
+    files_arr.reverse();
     const id_num = vis_stim.children.length;
     const stim_row_div = createDiv(`Vis-stim-${id_num}`, vis_stim, [
       "vis-stim-row",
@@ -274,8 +246,8 @@ export function prepVisStimCtrlPanel(
     // const set_title = document.createElement("h5");
     // set_title.textContent = `Set ${id_num}: ${files.length} stimulus`;
     // stim_row_div.appendChild(set_title);
-    const title_card = createDiv(`img-card-${id_num}`, stim_row_div, ["card"]);
-    title_card.setAttribute("style", "width:10vw");
+    const title_card = createDiv(`img-card-${id_num}`, stim_row_div, ["card", "card_12vw", "center"]);
+    // title_card.setAttribute("style", "width:10vw");
     const title_header = createDiv(`img-card-header-${id_num}`, title_card, [
       "card-header",
     ]);
@@ -283,13 +255,61 @@ export function prepVisStimCtrlPanel(
       `img-card-header-content-${id_num}`,
       title_header,
       ["card-title", "h6"],
-      `Set ${id_num + 1}: ${files.length} stimulus`,
+      `Set ${id_num + 1}: ${files_arr.length} stimulus`,
     );
 
-    for (let i = 0; i < files.length; i++) {
+    const title_card_content = createDiv(`img-card-content-${id_num}`, title_card, [
+      "card-image",
+    ]);
+    title_card_content.setAttribute("style", "display:flex;flex-direction: column;")
+
+    const num_repeat_input_id = "num_repeat_time_s";
+    const num_repeat_label = createLabel(
+      "num_repeat_time_span",
+      title_card_content,
+      num_repeat_input_id,
+      ["lg-label"],
+      "# repeat each:",
+    );
+
+
+    const num_repeat_input = createNumInput(
+      num_repeat_input_id,
+      title_card_content,
+      ["lg-input"],
+      1,
+      100,
+      1,
+      start_config.num_repeat,
+    );
+    num_repeat_input.setAttribute("style", "width:3em")
+
+
+    const stim_show_time_input_id = "stim_show_time_time_s";
+    const stim_show_time_label = createLabel(
+      "stim_show_time_time_span",
+      title_card_content,
+      stim_show_time_input_id,
+      ["lg-label"],
+      "Display time (ms):",
+    );
+
+
+    const stim_show_time_input = createNumInput(
+      stim_show_time_input_id,
+      title_card_content,
+      ["lg-input"],
+      1,
+      30000,
+      1,
+      start_config.show_time_ms,
+    );
+    stim_show_time_input.setAttribute("style", "width:4em")
+
+
+    for (let i = 0; i < files_arr.length; i++) {
       const img_card_id = `${id_num}-${i}`;
-      const card = createDiv(`img-card-${img_card_id}`, stim_row_div, ["card"]);
-      card.setAttribute("style", "width:10vw");
+      const card = createDiv(`img-card-${img_card_id}`, stim_row_div, ["card", "card_12vw"]);
       const header = createDiv(`img-card-header-${img_card_id}`, card, [
         "card-header",
       ]);
@@ -297,13 +317,13 @@ export function prepVisStimCtrlPanel(
         `img-card-header-content-${img_card_id}`,
         header,
         ["card-title", "h6"],
-        files[i].name,
+        files_arr[i].name,
       );
       const card_img = createDiv(`img-card-img-${img_card_id}`, card, [
         "card-image",
       ]);
       const reader = new FileReader();
-      reader.readAsDataURL(files[i]);
+      reader.readAsDataURL(files_arr[i]);
       reader.onload = (e: any) => {
         const img = document.createElement("img");
         img.setAttribute("src", e.target?.result);
