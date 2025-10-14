@@ -48,6 +48,10 @@ export function delay(time_ms: number, callback: Function | null = null) {
   });
 }
 
+export function delay_ms(time_ms: number) {
+  return () => delay(time_ms)
+}
+
 export function linspace(
   start: number,
   stop: number,
@@ -97,4 +101,12 @@ export function shuffle(arr_in: any[], inplace: boolean = false) {
     arr[j] = temp;
   }
   return arr;
+}
+
+export function getRandomFloat(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+export function epochTimestamp() {
+  return performance.timeOrigin + performance.now()
 }

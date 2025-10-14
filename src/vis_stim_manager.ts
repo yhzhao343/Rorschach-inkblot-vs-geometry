@@ -1,5 +1,5 @@
 import { VisStimConfig, StimulusSetInfo } from "./interfaces";
-import { openFullscreen, pixi_large_text, linspace, arange, shuffle } from "./helpers";
+import { openFullscreen, pixi_large_text, linspace, arange, shuffle, epochTimestamp } from "./helpers";
 import * as PIXI from 'pixi.js';
 
 const app = new PIXI.Application();
@@ -78,7 +78,7 @@ export async function prepVisStimCtrlPanel(
   parentElement?: HTMLElement,
 ) {
   updateSearchURL(start_config);
-  console.log(start_config);
+  // console.log(start_config);
 
   const control_panel_div = document.createElement("div");
   control_panel_div.classList.add("control-panel-div");
@@ -280,7 +280,7 @@ export async function prepVisStimCtrlPanel(
   const vis_stim = createDiv("vis_stim", control_panel_div, ["flat-flex-col"]);
   vis_stim.setAttribute("style", "width:100%");
   control_panel_div.appendChild(vis_stim);
-  const file_lists: StimulusSetInfo[] = []
+  const stim_info_list: StimulusSetInfo[] = []
 
   const play_stim_div = createDiv("play_stim", control_panel_div, ["flat-flex-col"]);
   play_stim_div.setAttribute("style", "width:100%;margin-top:2vh");
@@ -296,11 +296,13 @@ export async function prepVisStimCtrlPanel(
   // let my_promise = new Promise((resolve) => {
   //   my_resolve = resolve;
   // });
+
   let my_promise: Promise<any>
 
   play_stim_button.onclick = (event: Event) => {
     // my_resolve();
-    const stim_seq = generateStimSeq(file_lists);
+    const stim_seq = generateStimSeq(stim_info_list);
+    console.log(stim_seq)
     my_promise = Promise.resolve();
     document.addEventListener("keydown", on_key_down);
     control_panel_div.classList.add("hide");
@@ -317,25 +319,40 @@ export async function prepVisStimCtrlPanel(
   }
   function start(count_down = 5, interval_ms = 1000) {
     for (let i = count_down; i > 0; i--) {
-      my_promise = my_promise.then(() => (delay(interval_ms, () => {
-        app.stage.removeChildren();
-        showPixiText(`${i}`);
-        console.log(`${i}`);
-      })));
+      my_promise = my_promise
+        .then(delay_ms(interval_ms))
+        .then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.removeChildren();
+            showPixiText(`${i}`);
+            const timestamp = epochTimestamp();
+          })
+
+        })
     }
-    my_promise = my_promise.then(() => (delay(interval_ms, () => {
-      app.stage.removeChildren();
-    })))
+    my_promise = my_promise.then(delay_ms(interval_ms)).then(clearCanvas);
     return my_promise;
   }
 
   function baseline_start(txt: string = "Pre") {
     my_promise = my_promise
       .then(() => {
-        showPixiText(`${txt}-experiment baseline ${start_config.start_baseline_s}`)
+        app.ticker.addOnce(() => {
+          showPixiText(`${txt}-experiment baseline ${start_config.start_baseline_s}`)
+          const timestamp = epochTimestamp();
+        })
       })
-      .then(() => delay(start_config.start_baseline_s * 1e3))
+      .then(delay_ms(start_config.start_baseline_s * 1e3))
     return my_promise;
+  }
+
+  function show_stim_sequence(stim_seq: number[][]) {
+    for (let i = 0; i < stim_seq.length; i++) {
+      const stim = stim_seq[i]
+      my_promise = my_promise
+        .then(clearCanvas)
+        .then(() => delay(start_config.start_fixation_ms + start_config.jitter_ms))
+    }
   }
 
   function delay(time_ms: number, callback: Function | null = null) {
@@ -352,6 +369,9 @@ export async function prepVisStimCtrlPanel(
         }
       }, time_ms);
     });
+  }
+  function delay_ms(time_ms: number) {
+    return () => delay(time_ms)
   }
 
   function on_key_down(event: KeyboardEvent) {
@@ -375,7 +395,7 @@ export async function prepVisStimCtrlPanel(
       num_repeat: start_config.num_repeat,
       show_time_ms: start_config.show_time_ms,
     }
-    file_lists.push(info);
+    stim_info_list.push(info);
     const files_arr = Array.from(files);
     files_arr.reverse();
     const id_num = vis_stim.children.length;
