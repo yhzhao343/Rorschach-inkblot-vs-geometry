@@ -1,6 +1,6 @@
 import { startConfigFromUrl, prepVisStimCtrlPanel } from "./vis_stim_manager";
 
-prepVisStimCtrlPanel(startConfigFromUrl());
+await prepVisStimCtrlPanel(startConfigFromUrl());
 
 function location_reload() {
   location.reload();

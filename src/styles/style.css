@@ -5,7 +5,11 @@ body {
     margin: 0px;
     border: 0;
     overflow: hidden;
-    display: block;
+    /*display: block;*/
+}
+
+div.hidden {
+    display: none;
 }
 
 div.control-panel-div {
@@ -40,21 +44,37 @@ div.vis-stim-row {
     justify-content: center;
     gap: 0.1rem;
     padding-top: 3vh;
-    width: 100vw;
-    padding-left: 2vw;
-    padding-right: 2vw;
+    width: 98vw;
+    margin-left: 1vw;
+    margin-right: 1vw;
 }
+
+div.stim-setting {
+    width: 8vw;
+    align-items: center;
+    justify-content: center;
+}
+div.stims {
+    width: 90vw;
+    display: flex;
+    flex-direction: row;
+    gap: 0.1rem;
+    align-items: center;
+    justify-content: center;
+}
+
 img.fit {
     width: 100%;
     max-height: auto;
-    display: block;
+    /*display: block;*/
     object-fit: contain;
 }
-.inline-block {
-    display: inline-block;
+
+.width_8vw {
+    width:8vw;
 }
 
-.card_12vw {
+.width_12vw {
     width:12vw;
 }
 
@@ -89,7 +109,7 @@ img.fit {
 }
 
 .xlf-button {
-  display: block;
+  /*display: block;*/
   height: 6vh;
   padding-left: 26px;
   padding-right: 26px;
@@ -104,6 +124,9 @@ img.fit {
   background-color: #5755d9;
 }
 
+.hide {
+    display: none !important;
+}
 
 div.xscroll {
     overflow-x: auto;
