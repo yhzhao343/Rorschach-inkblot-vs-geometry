@@ -584,19 +584,19 @@ export async function prepVisStimCtrlPanel(
     const setting_div = createDiv(`Vis-stim-${id_num}-settings`, stim_row_div, [
       "stim-setting"
     ]);
-    const title_card = createDiv(`img-card-${id_num}`, setting_div, ["card", "width_8vw"]);
+    const title_card = createDiv(`img-card-${id_num}`, setting_div, ["card", "width_8vw", "gray"]);
     const title_header = createDiv(`img-card-header-${id_num}`, title_card, [
-      "card-header",
+      "card-header", "center"
     ]);
     const title_header_content = createDiv(
       `img-card-header-content-${id_num}`,
       title_header,
-      ["card-title", "h6"],
+      ["card-title", "h6", "center"],
       `Set ${id_num + 1}: ${files_arr.length} stimuli`,
     );
 
     const title_card_content = createDiv(`img-card-content-${id_num}`, title_card, [
-      "card-image", "width_8vw"
+      "card-image", "width_8vw", "center"
     ]);
     title_card_content.setAttribute("style", "display:flex;flex-direction: column;")
 
@@ -605,7 +605,7 @@ export async function prepVisStimCtrlPanel(
       "num_repeat_time_span",
       title_card_content,
       num_repeat_input_id,
-      ["form-label", "width_8vw"],
+      ["form-label"],
       "# repeat each:",
     );
 
@@ -614,7 +614,7 @@ export async function prepVisStimCtrlPanel(
       num_repeat_input_id,
       title_card_content,
       // ["form-input", "width_12vw"],
-      ["lg-input", "width_8vw"],
+      ["lg-input"],
       1,
       100,
       1,
@@ -639,7 +639,7 @@ export async function prepVisStimCtrlPanel(
       "stim_show_time_time_span",
       title_card_content,
       stim_show_time_input_id,
-      ["form-label", "width_12vw"],
+      ["form-label"],
       "Display time (ms):",
     );
 
@@ -647,7 +647,7 @@ export async function prepVisStimCtrlPanel(
     const stim_show_time_input = createNumInput(
       stim_show_time_input_id,
       title_card_content,
-      ["lg-input", "width_12vw"],
+      ["lg-input"],
       1,
       30000,
       1,
@@ -684,7 +684,7 @@ export async function prepVisStimCtrlPanel(
         files_arr[i].name,
       );
       const card_img = createDiv(`img-card-img-${img_card_id}`, card, [
-        "card-image",
+        "card-image", "center"
       ]);
       const reader = new FileReader();
       reader.readAsDataURL(files_arr[i]);
