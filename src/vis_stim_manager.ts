@@ -1,7 +1,7 @@
-import { VisStimConfig, StimulusSetInfo, EventDetail, StimEvent } from "./interfaces";
+import { VisStimConfig, StimulusSetInfo, StimEvent } from "./interfaces";
 import {
-  openFullscreen, pixi_large_text, linspace, arange, shuffle,
-  any, epochTimestamp, pixi_huge_text, getRandomFloat, download
+  openFullscreen, pixi_large_text, shuffle, any, epochTimestamp,
+  pixi_huge_text, getRandomFloat, download
 } from "./helpers";
 import * as PIXI from 'pixi.js';
 
@@ -16,6 +16,14 @@ const defaultConfig: VisStimConfig = {
   end_baseline_s: 180,
   jitter_ms: 500,
 };
+
+const DATA_SERVER_PORT = 3200;
+const VISUAL_STIM_PATH = "rorschach_inkblot_vs_genometry"
+const WS_URL = `ws://127.0.0.1:${DATA_SERVER_PORT}/${VISUAL_STIM_PATH}/ws`;
+let socket: WebSocket | undefined;
+const MAX_RECONNECT = 5;
+let reconnect_count = 0;
+let reconnect_timeout: number;
 
 export function getDefaultStartConfig(): VisStimConfig {
   return { ...defaultConfig };
@@ -337,10 +345,6 @@ export async function prepVisStimCtrlPanel(
   play_stim_button.textContent = "Start experiment";
   play_stim_div.appendChild(play_stim_button);
   let timeout = 0;
-  // let my_resolve: Function;
-  // let my_promise = new Promise((resolve) => {
-  //   my_resolve = resolve;
-  // });
 
   let my_promise: Promise<any>
   let stim_order_i = -1
@@ -366,6 +370,12 @@ export async function prepVisStimCtrlPanel(
     if (verbose) {
       console.log(e);
     }
+    setTimeout(() => {
+      if (socket?.readyState === WebSocket.OPEN) {
+        e["send_epoch_time_ms"] = epochTimestamp();
+        socket.send(JSON.stringify(e))
+      }
+    }, 0)
     return e
   }
 
@@ -840,3 +850,37 @@ function createSwitch(
   label.appendChild(icon);
   return label;
 }
+
+function ws_connect() {
+
+  socket = new WebSocket(WS_URL);
+
+  socket.addEventListener("open", (event) => {
+    console.log(`ws to ${WS_URL} connected!`);
+    reconnect_count = 0;
+  });
+
+  socket.addEventListener("close", (event) => {
+    console.log(
+      `ws to ${WS_URL} disconnected! ${reconnect_count}/${MAX_RECONNECT}`,
+    );
+    if (reconnect_count < MAX_RECONNECT) {
+      reconnect_timeout = setTimeout(ws_connect, 2000);
+    }
+  });
+
+  socket.onerror = (err) => {
+    reconnect_count++;
+  };
+
+  socket.addEventListener("message", (event) => {
+    if (event.data === "Another instance is connected!") {
+      reconnect_count = MAX_RECONNECT;
+      window.alert(
+        "Another instance is connected! Refresh page to take control if you must",
+      );
+    }
+  });
+}
+
+setTimeout(ws_connect, 0);
