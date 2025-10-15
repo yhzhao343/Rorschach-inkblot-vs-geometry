@@ -9,7 +9,6 @@ build/
 out/
 es/
 lib/
-*.js
 *.d.ts
 *.map
 
