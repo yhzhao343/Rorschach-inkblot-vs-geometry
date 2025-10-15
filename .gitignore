@@ -5,13 +5,13 @@ node_modules/
 
 # Build output
 dist/
-build/
+# build/
 out/
 es/
 lib/
-*.js
+# *.js
 *.d.ts
-*.map
+# *.map
 
 # Dependency lock files
 package-lock.json

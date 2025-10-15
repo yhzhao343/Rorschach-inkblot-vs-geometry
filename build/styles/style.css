@@ -1,0 +1,142 @@
+html,
+body {
+    width: 100%;
+    height: 100%;
+    margin: 0px;
+    border: 0;
+    overflow: hidden;
+    /*display: block;*/
+}
+
+div.hidden {
+    display: none;
+}
+
+div.control-panel-div {
+    background-color: #e5e5e5;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 80vh;
+    position: relative;
+    top: 10vh;
+}
+
+div.flat-form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.1rem;
+}
+
+div.flat-flex-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 98vw;
+    gap: 0.1rem;
+}
+
+div.flat-flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.1rem;
+    padding-top: 3vh;
+}
+
+div.vis-stim-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding-top: 3vh;
+    width: 98vw;
+    margin-left: 1vw;
+    margin-right: 1vw;
+}
+
+div.stim-setting {
+    width: 8vw;
+    align-items: center;
+    justify-content: center;
+}
+div.stims {
+    width: 90vw;
+    display: flex;
+    flex-direction: row;
+    gap: 0.1rem;
+    align-items: center;
+    justify-content: center;
+}
+
+img.fit {
+    width: 100%;
+    max-height: auto;
+    /*display: block;*/
+    object-fit: contain;
+}
+
+.width_8vw {
+    width:8vw;
+}
+
+.width_12vw {
+    width:12vw;
+}
+
+.xlg-input {
+    font-size: 1.6em;
+    margin-right: 20px;
+    height: 5vh;
+    font-family: Arial, sans-serif;
+}
+
+.xlg-label {
+    font-size: 1.6em;
+    font-family: Arial, sans-serif;
+    margin-right: 6px;
+}
+
+.lg-input {
+    font-size: 1.1em;
+    height: 3vh;
+    font-family: Arial, sans-serif;
+}
+
+.lg-label {
+    font-size: 1.1em;
+    font-family: Arial, sans-serif;
+    margin-right: 6px;
+}
+
+.center {
+    align-items: center;
+    justify-content: center;
+}
+
+.xlf-button {
+  /*display: block;*/
+  height: 6vh;
+  padding-left: 26px;
+  padding-right: 26px;
+  font-size: 2em;
+  cursor: pointer;
+  text-align: center;
+  margin-right: 10px;
+  border-radius: 3vh;
+  border: none;
+  color: white;
+  font-family: Arial, sans-serif;
+  background-color: #5755d9;
+}
+
+.hide {
+    display: none !important;
+}
+
+div.xscroll {
+    overflow-x: auto;
+}
