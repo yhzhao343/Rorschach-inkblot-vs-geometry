@@ -21,7 +21,8 @@
     "build": "npm run cp-file && npm run add-coi && esbuild src/index.ts --bundle --outfile=build/index.js --sourcemap --define:window.IS_PRODUCTION=true --allow-overwrite --format=esm --minify --tree-shaking=true",
     "serve": "esbuild --servedir=build",
     "dev": "npm run cp-file && npm run add-coi && esbuild src/index.ts --bundle --outfile=build/index.js --sourcemap --define:window.IS_PRODUCTION=false --watch --servedir=build --allow-overwrite --format=esm",
-    "predeploy": "npm run build"
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@spectre-org/spectre-css": "^1.2.0",
