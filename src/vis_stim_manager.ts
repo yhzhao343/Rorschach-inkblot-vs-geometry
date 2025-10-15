@@ -1,5 +1,8 @@
-import { VisStimConfig, StimulusSetInfo } from "./interfaces";
-import { openFullscreen, pixi_large_text, linspace, arange, shuffle, epochTimestamp } from "./helpers";
+import { VisStimConfig, StimulusSetInfo, EventDetail, StimEvent } from "./interfaces";
+import {
+  openFullscreen, pixi_large_text, linspace, arange, shuffle,
+  any, epochTimestamp, pixi_huge_text, getRandomFloat, download
+} from "./helpers";
 import * as PIXI from 'pixi.js';
 
 const app = new PIXI.Application();
@@ -20,8 +23,6 @@ export function getDefaultStartConfig(): VisStimConfig {
 
 export function startConfigFromUrl() {
   const params: URLSearchParams = new URLSearchParams(window.location.search);
-  // const start_config: VisStimConfig = getDefaultStartConfig();
-  // const param_baseline_ms = params.get("baseline_ms")
   return updateConfig(params);
 }
 
@@ -260,11 +261,11 @@ export async function prepVisStimCtrlPanel(
   add_vis_stim_in.setAttribute("style", "display:none");
   add_vis_stim_in.setAttribute("accept", "image/*");
   add_vis_stim_in.multiple = true;
-  add_vis_stim_in.onchange = (event: Event) => {
+  add_vis_stim_in.onchange = async (event: Event) => {
     const target = event.target as HTMLInputElement;
     const files = target.files as FileList;
     if (files.length > 0) {
-      addVisStimSet(files);
+      await addVisStimSet(files);
     }
   };
 
@@ -278,13 +279,57 @@ export async function prepVisStimCtrlPanel(
   };
 
   const vis_stim = createDiv("vis_stim", control_panel_div, ["flat-flex-col"]);
-  vis_stim.setAttribute("style", "width:100%");
+  // vis_stim.setAttribute("style", "width:100%");
   control_panel_div.appendChild(vis_stim);
   const stim_info_list: StimulusSetInfo[] = []
 
-  const play_stim_div = createDiv("play_stim", control_panel_div, ["flat-flex-col"]);
-  play_stim_div.setAttribute("style", "width:100%;margin-top:2vh");
+  const play_stim_div = createDiv("play_stim", control_panel_div, ["flat-flex-row"]);
+  // play_stim_div.setAttribute("style", "width:100%;margin-top:2vh");
   control_panel_div.appendChild(play_stim_div);
+
+  let show_progress = true
+  const show_progress_set = createSwitch("Show progress", (event: any) => {
+    if (event.target?.checked) {
+      show_progress = true;
+    } else {
+      show_progress = false;
+    }
+  })
+  const show_progress_input = show_progress_set.children.item(0) as HTMLInputElement;
+  show_progress_input.disabled = true;
+  show_progress_input.checked = show_progress;
+  // shuffle_between_set.classList.add("width_12vw");
+  play_stim_div.appendChild(show_progress_set);
+
+
+  let shuffle_between = true
+  const shuffle_between_set = createSwitch("Shuffle between set", (event: any) => {
+    if (event.target?.checked) {
+      shuffle_between = true;
+    } else {
+      shuffle_between = false;
+    }
+  })
+  const shuffle_between_input = shuffle_between_set.children.item(0) as HTMLInputElement;
+  shuffle_between_input.disabled = true;
+  shuffle_between_input.checked = shuffle_between;
+  // shuffle_between_set.classList.add("width_12vw");
+  play_stim_div.appendChild(shuffle_between_set);
+
+
+  let shuffle_within = true
+  const shuffle_within_set = createSwitch("Shuffle within set", (event: any) => {
+    if (event.target?.checked) {
+      shuffle_within = true;
+    } else {
+      shuffle_within = false;
+    }
+  })
+  const shuffle_within_input = shuffle_within_set.children.item(0) as HTMLInputElement;
+  shuffle_within_input.disabled = true;
+  shuffle_within_input.checked = shuffle_within;
+  // shuffle_within_set.classList.add("width_12vw");
+  play_stim_div.appendChild(shuffle_within_set);
 
   const play_stim_button = document.createElement("button");
   play_stim_button.classList.add("btn", "btn-lg", "btn-primary");
@@ -298,20 +343,54 @@ export async function prepVisStimCtrlPanel(
   // });
 
   let my_promise: Promise<any>
+  let stim_order_i = -1
+  let stim_set_i = -1
+  let stim_seq_i = -1
+  let event_list: StimEvent[] = []
+
+  function eventGen(epoch_time_ms: number, type: string, event: string, verbose = true) {
+    let e = {
+      event: {
+        stim_order_i: stim_order_i,
+        stim_set_num: stim_set_i,
+        stim_seq_num: stim_seq_i,
+        stim_file_name: "",
+        type: type,
+        event: event,
+      },
+      epoch_time_ms: epoch_time_ms,
+    }
+    if ((stim_set_i > -1) && (stim_seq_i > -1)) {
+      e.event.stim_file_name = stim_info_list[stim_set_i].stim_info[stim_seq_i].file.name
+    }
+    if (verbose) {
+      console.log(e);
+    }
+    return e
+  }
 
   play_stim_button.onclick = (event: Event) => {
-    // my_resolve();
-    const stim_seq = generateStimSeq(stim_info_list);
-    console.log(stim_seq)
+    event_list = [];
+    const stim_seq = generateStimSeq(stim_info_list, shuffle_within, shuffle_between);
     my_promise = Promise.resolve();
     document.addEventListener("keydown", on_key_down);
     control_panel_div.classList.add("hide");
     app.canvas.classList.remove("hide");
     openFullscreen();
+    for (let stim_set_i = 0; stim_set_i < stim_info_list.length; stim_set_i++) {
+      const stim_set = stim_info_list[stim_set_i];
+      for (let stim_i = 0; stim_i < stim_set.stim_info.length; stim_i++) {
+        stim_set.stim_info[stim_i].sprite.x = app.screen.width / 2
+        stim_set.stim_info[stim_i].sprite.y = app.screen.height / 2
+      }
+    }
     my_promise
       .then(() => start())
-      .then(() => baseline_start("Pre"))
-      .then(clearCanvas);
+      .then(() => baseline_start())
+      .then(show_stim_sequence(stim_seq, show_progress))
+      .then(() => baseline_end())
+      .then(() => download("visual_stimuli_events", JSON.stringify((event_list), null, 2)))
+
   }
   //
   function clearCanvas() {
@@ -334,24 +413,113 @@ export async function prepVisStimCtrlPanel(
     return my_promise;
   }
 
-  function baseline_start(txt: string = "Pre") {
-    my_promise = my_promise
-      .then(() => {
-        app.ticker.addOnce(() => {
-          showPixiText(`${txt}-experiment baseline ${start_config.start_baseline_s}`)
-          const timestamp = epochTimestamp();
+  function baseline_start() {
+    if (start_config.start_baseline_s > 0) {
+      my_promise = my_promise
+        .then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.removeChildren();
+            showPixiText(`Pre-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`)
+            const timestamp = epochTimestamp();
+            event_list.push(eventGen(timestamp, "Pre-baseline", "start"))
+          })
         })
-      })
-      .then(delay_ms(start_config.start_baseline_s * 1e3))
+        .then(delay_ms(start_config.start_baseline_s * 1e3))
+        .then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.removeChildren();
+            const timestamp = epochTimestamp();
+            event_list.push(eventGen(timestamp, "Pre-baseline", "end"))
+          })
+        })
+    }
     return my_promise;
   }
 
-  function show_stim_sequence(stim_seq: number[][]) {
-    for (let i = 0; i < stim_seq.length; i++) {
-      const stim = stim_seq[i]
+  function baseline_end() {
+    if (start_config.end_baseline_s > 0) {
       my_promise = my_promise
-        .then(clearCanvas)
-        .then(() => delay(start_config.start_fixation_ms + start_config.jitter_ms))
+        .then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.removeChildren();
+            showPixiText(`Pre-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`)
+            const timestamp = epochTimestamp();
+            event_list.push(eventGen(timestamp, "Post-baseline", "start"))
+          })
+        })
+        .then(delay_ms(start_config.end_baseline_s * 1e3))
+        .then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.removeChildren();
+            const timestamp = epochTimestamp();
+            event_list.push(eventGen(timestamp, "Post-baseline", "end"))
+          })
+        })
+    }
+    return my_promise;
+  }
+
+  function event_end(type: string, event: string) {
+    return () => {
+      app.ticker.addOnce(() => {
+        app.stage.removeChildren();
+        const timestamp = epochTimestamp();
+        event_list.push(eventGen(timestamp, type, event))
+      })
+    }
+  }
+
+  function show_stim_sequence(stim_seq: number[][], show_stim_sequence = true) {
+    return () => {
+      for (let i = 0; i < stim_seq.length; i++) {
+        stim_order_i = i
+        stim_set_i = stim_seq[i][0];
+        stim_seq_i = stim_seq[i][1];
+        const sprite = stim_info_list[stim_set_i].stim_info[stim_seq_i].sprite
+        sprite.x = app.screen.width / 2
+        sprite.y = app.screen.height / 2
+
+        const fixation_time_ms = start_config.start_fixation_ms + getRandomFloat(0, start_config.jitter_ms)
+        if (fixation_time_ms > 0) {
+          my_promise = my_promise
+            .then(() => {
+              app.ticker.addOnce(() => {
+                app.stage.removeChildren();
+                showPixiText(`+`, pixi_huge_text);
+                const timestamp = epochTimestamp();
+                event_list.push(eventGen(timestamp, "show fixation", "start"))
+              })
+            })
+            .then(delay_ms(fixation_time_ms))
+            .then(event_end("show fixation", "end"))
+        }
+
+
+        my_promise = my_promise.then(() => {
+          app.ticker.addOnce(() => {
+            app.stage.addChild(sprite);
+            const timestamp = epochTimestamp();
+            event_list.push(eventGen(timestamp, "show stim", "start"))
+          })
+        })
+          .then(delay_ms(stim_info_list[stim_set_i].show_time_ms))
+          .then(event_end("show stim", "end"))
+
+        if (start_config.end_white_ms > 0) {
+          my_promise = my_promise.then(() => {
+            app.ticker.addOnce(() => {
+              app.stage.removeChildren();
+              if (show_stim_sequence) {
+                showPixiText(`Progress\n${i + 1}/${stim_seq.length}`, pixi_huge_text);
+              }
+              const timestamp = epochTimestamp();
+              event_list.push(eventGen(timestamp, "show post stim", "start"))
+            })
+          }).then(delay_ms(start_config.end_white_ms))
+            .then(event_end("show post stim", "end"))
+        }
+      }
+      return my_promise;
     }
   }
 
@@ -382,14 +550,15 @@ export async function prepVisStimCtrlPanel(
       app.stage.removeChildren();
       app.canvas.classList.add("hide");
       control_panel_div.classList.remove("hide");
+      download("visual_stimuli_events", JSON.stringify((event_list), null, 2))
     } else {
-
+      eventGen(epochTimestamp(), "keydown", event.key)
     }
   }
 
   // add_vis_stim_set.innerHTML = "+ Stim Set";
   // vis_stim.appendChild(add_vis_stim_set);
-  function addVisStimSet(files: FileList) {
+  async function addVisStimSet(files: FileList) {
     const info: StimulusSetInfo = {
       stim_info: [],
       num_repeat: start_config.num_repeat,
@@ -405,11 +574,7 @@ export async function prepVisStimCtrlPanel(
     const setting_div = createDiv(`Vis-stim-${id_num}-settings`, stim_row_div, [
       "stim-setting"
     ]);
-    // const set_title = document.createElement("h5");
-    // set_title.textContent = `Set ${id_num}: ${files.length} stimulus`;
-    // stim_row_div.appendChild(set_title);
     const title_card = createDiv(`img-card-${id_num}`, setting_div, ["card", "width_8vw"]);
-    // title_card.setAttribute("style", "width:10vw");
     const title_header = createDiv(`img-card-header-${id_num}`, title_card, [
       "card-header",
     ]);
@@ -513,44 +678,66 @@ export async function prepVisStimCtrlPanel(
       ]);
       const reader = new FileReader();
       reader.readAsDataURL(files_arr[i]);
-      reader.onload = (e: any) => {
+      reader.onload = async (e: any) => {
         const img = document.createElement("img");
         img.setAttribute("src", e.target?.result);
         img.classList.add("fit");
         card_img.appendChild(img);
         const imageUrl = e.target?.result as string;
         if (imageUrl) {
-          // info.sprites.push(createSprite(imageUrl));
-          // info.filelist.push(files_arr[i])
-          info.stim_info.push({ sprite: createSprite(imageUrl), file: files_arr[i] })
+          info.stim_info.push({
+            sprite: await createSprite(imageUrl),
+            file: files_arr[i]
+          })
         }
       };
     }
     if (play_stim_button.disabled) {
       play_stim_button.disabled = false;
     }
+    if (shuffle_within_input.disabled) {
+      shuffle_within_input.disabled = false;
+    }
+    if ((stim_info_list.length > 1) && shuffle_between_input.disabled) {
+      shuffle_between_input.disabled = false;
+    }
+    if (show_progress_input.disabled) {
+      show_progress_input.disabled = false;
+    }
+
   }
 }
 
-function generateStimSeq(infos: StimulusSetInfo[]) {
-  let stim_seq: number[][] = []
-  for (let set_i = 0; set_i < infos.length; set_i++) {
-    const info = infos[set_i];
-    const set_seq: number[][] = []
-    for (let stim_i = 0; stim_i < info.stim_info.length; stim_i++) {
-      set_seq.push([set_i, stim_i]);
-    }
-    for (let r_i = 0; r_i < info.num_repeat; r_i++) {
-      stim_seq = stim_seq.concat(set_seq);
+function generateStimSeq(infos: StimulusSetInfo[], shuffle_within = true, shuffle_between = true) {
+  let stim_seq: number[][] = [];
+  let stim_seqs: number[][][] = [];
+  let stim_set_repeat_left: number[] = infos.map(e => e.num_repeat);
+  while (any(stim_set_repeat_left)) {
+    for (let set_i = 0; set_i < infos.length; set_i++) {
+      if (stim_set_repeat_left[set_i] > 0) {
+        const info = infos[set_i];
+        stim_set_repeat_left[set_i] -= 1;
+        const set_seq: number[][] = [];
+        for (let stim_i = 0; stim_i < info.stim_info.length; stim_i++) {
+          set_seq.push([set_i, stim_i]);
+        }
+        if (shuffle_within) {
+          shuffle(set_seq, true);
+        }
+        stim_seqs.push(set_seq);
+      }
     }
   }
-  shuffle(stim_seq, true)
+  stim_seq = stim_seq.concat(...stim_seqs);
+  if (shuffle_between) {
+    shuffle(stim_seq, true);
+  }
   return stim_seq
 }
 
 
-function showPixiText(txt: string) {
-  let pre_baseline_text = new PIXI.Text({ text: txt, style: pixi_large_text });
+function showPixiText(txt: string, text_style: PIXI.TextStyle = pixi_large_text) {
+  let pre_baseline_text = new PIXI.Text({ text: txt, style: text_style });
   pre_baseline_text.anchor.set(0.5);
   pre_baseline_text.x = app.screen.width / 2;
   pre_baseline_text.y = app.screen.height / 2;
@@ -558,10 +745,13 @@ function showPixiText(txt: string) {
   return pre_baseline_text;
 }
 
-function createSprite(imageUrl: string) {
-  const texture = PIXI.Texture.from(imageUrl);
+async function createSprite(imageUrl: string) {
+  // const texture = PIXI.Texture.from(imageUrl);
+  const texture = await PIXI.Assets.load(imageUrl);
   const sprite = new PIXI.Sprite(texture);
   sprite.anchor.set(0.5);
+  sprite.x = app.screen.width / 2;
+  sprite.y = app.screen.height / 2;
   return sprite
 }
 
@@ -628,4 +818,25 @@ function createDiv(
   const myDiv = document.createElement("div");
   configureHTMLElement(myDiv, id, parent, classList, textContent);
   return myDiv;
+}
+
+
+function createSwitch(
+  labeltext: string,
+  eventHandler: (ev: Event) => void,
+) {
+  const label = document.createElement("label");
+  label.setAttribute("class", "form-switch");
+  label.classList.add("label-lg");
+  const input = document.createElement("input");
+  input.id = `${labeltext}-onoff`;
+  input.type = "checkbox";
+  input.addEventListener("change", eventHandler);
+  input.classList.add("input-lg");
+  const icon = document.createElement("i");
+  icon.classList.add("form-icon");
+  label.textContent = labeltext;
+  label.appendChild(input);
+  label.appendChild(icon);
+  return label;
 }

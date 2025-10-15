@@ -32,6 +32,13 @@ export const pixi_large_text = new PIXI.TextStyle({
   align: 'center'
 });
 
+export const pixi_huge_text = new PIXI.TextStyle({
+  fontFamily: 'Arial',
+  fontSize: 86,
+  fill: 0x000000, // White color
+  align: 'center'
+});
+
 export function delay(time_ms: number, callback: Function | null = null) {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
@@ -103,10 +110,32 @@ export function shuffle(arr_in: any[], inplace: boolean = false) {
   return arr;
 }
 
+export function any(arr: number[]) {
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] > 0) {
+      return true
+    }
+  }
+  return false
+}
+
 export function getRandomFloat(min, max) {
   return Math.random() * (max - min) + min;
 }
 
 export function epochTimestamp() {
   return performance.timeOrigin + performance.now()
+}
+
+export function download(
+  filename: string,
+  content: string,
+  mimeType: string = "application/json",
+) {
+  const a = document.createElement("a");
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  a.setAttribute("href", url);
+  a.setAttribute("download", filename);
+  a.click();
 }

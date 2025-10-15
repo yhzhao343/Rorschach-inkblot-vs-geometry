@@ -34,7 +34,16 @@ div.flat-flex-col {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 98vw;
     gap: 0.1rem;
+}
+
+div.flat-flex-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.1rem;
+    padding-top: 3vh;
 }
 
 div.vis-stim-row {
