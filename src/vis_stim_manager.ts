@@ -1,7 +1,7 @@
 import { VisStimConfig, StimulusSetInfo, StimEvent } from "./interfaces";
 import {
   openFullscreen, pixi_large_text, shuffle, any, epochTimestamp,
-  pixi_huge_text, getRandomFloat, download
+  pixi_huge_text, getRandomFloat, download, closeFullscreen
 } from "./helpers";
 import * as PIXI from 'pixi.js';
 
@@ -395,11 +395,12 @@ export async function prepVisStimCtrlPanel(
       }
     }
     my_promise
-      .then(() => start())
-      .then(() => baseline_start())
+      .then(start)
+      .then(baseline_start)
       .then(show_stim_sequence(stim_seq, show_progress))
-      .then(() => baseline_end())
-      .then(() => download("visual_stimuli_events", JSON.stringify((event_list), null, 2)))
+      .then(baseline_end)
+      .then(closeFullscreen)
+      .then(exitExperiment)
 
   }
   //
@@ -452,7 +453,7 @@ export async function prepVisStimCtrlPanel(
         .then(() => {
           app.ticker.addOnce(() => {
             app.stage.removeChildren();
-            showPixiText(`Pre-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`)
+            showPixiText(`Post-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`)
             const timestamp = epochTimestamp();
             event_list.push(eventGen(timestamp, "Post-baseline", "start"))
           })
@@ -552,15 +553,21 @@ export async function prepVisStimCtrlPanel(
     return () => delay(time_ms)
   }
 
+  function exitExperiment() {
+    clearTimeout(timeout);
+    my_promise.finally();
+    document.removeEventListener("keydown", on_key_down);
+    app.stage.removeChildren();
+    app.canvas.classList.add("hide");
+    control_panel_div.classList.remove("hide");
+    if (event_list.length > 0) {
+      download("visual_stimuli_events", JSON.stringify((event_list), null, 2))
+    }
+  }
+
   function on_key_down(event: KeyboardEvent) {
     if (event.key === "Escape") {
-      clearTimeout(timeout);
-      my_promise.finally();
-      document.removeEventListener("keydown", on_key_down);
-      app.stage.removeChildren();
-      app.canvas.classList.add("hide");
-      control_panel_div.classList.remove("hide");
-      download("visual_stimuli_events", JSON.stringify((event_list), null, 2))
+      exitExperiment()
     } else {
       eventGen(epochTimestamp(), "keydown", event.key)
     }
