@@ -1,7 +1,7 @@
 {
-  "name": "rorschach-inkblot-vs-geometry",
+  "name": "Rorschach-inkblot-vs-geometry",
   "version": "1.0.0",
-  "description": "",
+  "description": "Psychological experiment visual stimulization system",
   "homepage": "https://github.com/yhzhao343/Rorschach-inkblot-vs-geometry#readme",
   "bugs": {
     "url": "https://github.com/yhzhao343/Rorschach-inkblot-vs-geometry/issues"
@@ -13,7 +13,7 @@
   "license": "ISC",
   "author": "Yuhui Zhao",
   "type": "module",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "add-coi": "esbuild node_modules/coi-serviceworker/coi-serviceworker.js --minify --outfile=./src/coi-serviceworker.min.js && cp ./src/coi-serviceworker.min.js ./build/coi-serviceworker.min.js",

@@ -1,11 +1,13 @@
 # Node modules
-node_modules/
+node_modules
+build
+
 .pnp/
 .pnp.cjs
 
 # Build output
 dist/
-# build/
+
 out/
 es/
 lib/
