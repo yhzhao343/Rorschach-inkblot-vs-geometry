@@ -40,7 +40,6 @@ div.flat-flex-col {
     flex-direction: column;
     align-items: center;
     width: 98vw;
-    gap: 0.1rem;
 }
 
 div.flat-flex-row {
@@ -84,11 +83,11 @@ img.fit {
 }
 
 .width_8vw {
-    width:8vw;
+    width: 8vw;
 }
 
 .width_12vw {
-    width:12vw;
+    width: 12vw;
 }
 
 .xlg-input {
@@ -122,19 +121,19 @@ img.fit {
 }
 
 .xlf-button {
-  /*display: block;*/
-  height: 6vh;
-  padding-left: 26px;
-  padding-right: 26px;
-  font-size: 2em;
-  cursor: pointer;
-  text-align: center;
-  margin-right: 10px;
-  border-radius: 3vh;
-  border: none;
-  color: white;
-  font-family: Arial, sans-serif;
-  background-color: #5755d9;
+    /*display: block;*/
+    height: 6vh;
+    padding-left: 26px;
+    padding-right: 26px;
+    font-size: 2em;
+    cursor: pointer;
+    text-align: center;
+    margin-right: 10px;
+    border-radius: 3vh;
+    border: none;
+    color: white;
+    font-family: Arial, sans-serif;
+    background-color: #5755d9;
 }
 
 .hide {
@@ -143,4 +142,9 @@ img.fit {
 
 div.xscroll {
     overflow-x: auto;
+}
+
+div.yscroll {
+    overflow-y: auto;
+    overflow-x: hidden;
 }
