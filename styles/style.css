@@ -23,6 +23,11 @@ div.control-panel-div {
     top: 10vh;
 }
 
+.gray {
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+}
+
 div.flat-form {
     display: flex;
     flex-direction: row;
@@ -64,7 +69,6 @@ div.stim-setting {
     justify-content: center;
 }
 div.stims {
-    width: 90vw;
     display: flex;
     flex-direction: row;
     gap: 0.1rem;
