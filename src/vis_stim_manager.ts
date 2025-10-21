@@ -388,35 +388,46 @@ export async function prepVisStimCtrlPanel(
   let event_list: StimEvent[] = [];
 
   function eventGen(
-    epoch_time_ms: number,
     type: string,
     event: string,
-    verbose = true,
+    epoch_time_ms: number | undefined = undefined,
+    stim_order_i: number | undefined = undefined,
+    stim_set_i: number | undefined = undefined,
+    stim_seq_i: number | undefined = undefined,
   ) {
-    let e = {
-      event: {
-        stim_order_i: stim_order_i,
-        stim_set_num: stim_set_i,
-        stim_seq_num: stim_seq_i,
-        stim_file_name: "",
-        type: type,
-        event: event,
-      },
-      epoch_time_ms: epoch_time_ms,
+    const e: StimEvent = {
+      type: type,
+      event: event,
     };
-    if (stim_set_i > -1 && stim_seq_i > -1) {
-      e.event.stim_file_name =
-        stim_info_list[stim_set_i].stim_info[stim_seq_i].file.name;
+    if (epoch_time_ms !== undefined) {
+      e.epoch_time_ms = epoch_time_ms;
     }
-    if (verbose) {
-      console.log(e);
+    if (stim_order_i !== undefined) {
+      e.stim_order_i = stim_order_i;
     }
-    setTimeout(() => {
-      if (socket?.readyState === WebSocket.OPEN) {
-        e["send_epoch_time_ms"] = epochTimestamp();
-        socket.send(JSON.stringify(e));
+
+    if (stim_set_i !== undefined) {
+      e.stim_set_num = stim_set_i;
+    }
+
+    if (stim_seq_i !== undefined) {
+      e.stim_seq_num = stim_seq_i;
+    }
+
+    if (stim_set_i !== undefined && stim_seq_i !== undefined) {
+      if (stim_set_i > -1 && stim_seq_i > -1) {
+        e.stim_file_name =
+          stim_info_list[stim_set_i].stim_info[stim_seq_i].file.name;
       }
-    }, 0);
+    }
+    if (socket?.readyState === WebSocket.OPEN) {
+      setTimeout(() => {
+        if (socket?.readyState === WebSocket.OPEN) {
+          e["send_epoch_time_ms"] = epochTimestamp();
+          socket.send(JSON.stringify(e));
+        }
+      }, 0);
+    }
     return e;
   }
 
@@ -441,9 +452,9 @@ export async function prepVisStimCtrlPanel(
     }
     my_promise
       .then(start)
-      .then(baseline_start)
+      .then(preBaselineStart)
       .then(show_stim_sequence(stim_seq, show_progress))
-      .then(baseline_end)
+      .then(postBaselineStart)
       .then(closeFullscreen)
       .then(exitExperiment);
   };
@@ -465,8 +476,10 @@ export async function prepVisStimCtrlPanel(
     return my_promise;
   }
 
-  function baseline_start() {
+  function preBaselineStart() {
     if (start_config.start_baseline_s > 0) {
+      const start_e: StimEvent = eventGen("Pre-baseline", "start");
+      const end_e: StimEvent = eventGen("Pre-baseline", "end");
       my_promise = my_promise
         .then(() => {
           app.ticker.addOnce(() => {
@@ -474,24 +487,26 @@ export async function prepVisStimCtrlPanel(
             showPixiText(
               `Pre-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`,
             );
-            const timestamp = epochTimestamp();
-            event_list.push(eventGen(timestamp, "Pre-baseline", "start"));
+            start_e.epoch_time_ms = epochTimestamp();
+            addToEventList(start_e);
           });
         })
         .then(delay_ms(start_config.start_baseline_s * 1e3))
         .then(() => {
           app.ticker.addOnce(() => {
             app.stage.removeChildren();
-            const timestamp = epochTimestamp();
-            event_list.push(eventGen(timestamp, "Pre-baseline", "end"));
+            end_e.epoch_time_ms = epochTimestamp();
+            addToEventList(end_e);
           });
         });
     }
     return my_promise;
   }
 
-  function baseline_end() {
+  function postBaselineStart() {
     if (start_config.end_baseline_s > 0) {
+      const start_e: StimEvent = eventGen("Post-baseline", "start");
+      const end_e: StimEvent = eventGen("Post-baseline", "end");
       my_promise = my_promise
         .then(() => {
           app.ticker.addOnce(() => {
@@ -499,28 +514,42 @@ export async function prepVisStimCtrlPanel(
             showPixiText(
               `Post-experiment baseline\n Please rest and stay calm for ${start_config.start_baseline_s}s with eyes open`,
             );
-            const timestamp = epochTimestamp();
-            event_list.push(eventGen(timestamp, "Post-baseline", "start"));
+            start_e.epoch_time_ms = epochTimestamp();
+            addToEventList(start_e);
           });
         })
         .then(delay_ms(start_config.end_baseline_s * 1e3))
         .then(() => {
           app.ticker.addOnce(() => {
             app.stage.removeChildren();
-            const timestamp = epochTimestamp();
-            event_list.push(eventGen(timestamp, "Post-baseline", "end"));
+            end_e.epoch_time_ms = epochTimestamp();
+            addToEventList(end_e);
           });
         });
     }
     return my_promise;
   }
 
-  function event_end(type: string, event: string) {
+  function event_end(
+    type: string,
+    event: string,
+    stim_order_i: number | undefined = undefined,
+    stim_set_i: number | undefined = undefined,
+    stim_seq_i: number | undefined = undefined,
+  ) {
+    const e: StimEvent = eventGen(
+      type,
+      event,
+      undefined,
+      stim_order_i,
+      stim_set_i,
+      stim_seq_i,
+    );
     return () => {
       app.ticker.addOnce(() => {
         app.stage.removeChildren();
-        const timestamp = epochTimestamp();
-        event_list.push(eventGen(timestamp, type, event));
+        e.epoch_time_ms = epochTimestamp();
+        addToEventList(e);
       });
     };
   }
@@ -540,46 +569,102 @@ export async function prepVisStimCtrlPanel(
           getRandomFloat(0, start_config.jitter_ms);
         if (fixation_time_ms > 0) {
           my_promise = my_promise
-            .then(() => {
-              app.ticker.addOnce(() => {
-                app.stage.removeChildren();
-                showPixiText(`+`, pixi_huge_text);
-                const timestamp = epochTimestamp();
-                event_list.push(eventGen(timestamp, "show fixation", "start"));
-              });
-            })
+            .then(
+              function () {
+                app.ticker.addOnce(
+                  function () {
+                    app.stage.removeChildren();
+                    showPixiText(`+`, pixi_huge_text);
+                    addToEventList(
+                      eventGen(
+                        "show fixation",
+                        "start",
+                        epochTimestamp(),
+                        this.stim_order_i,
+                        this.stim_set_i,
+                        this.stim_seq_i,
+                      ),
+                    );
+                  }.bind(this),
+                );
+              }.bind({ stim_order_i, stim_set_i, stim_seq_i }),
+            )
             .then(delay_ms(fixation_time_ms))
-            .then(event_end("show fixation", "end"));
+            .then(
+              event_end(
+                "show fixation",
+                "end",
+                stim_order_i,
+                stim_set_i,
+                stim_seq_i,
+              ),
+            );
         }
 
         my_promise = my_promise
-          .then(() => {
-            app.ticker.addOnce(() => {
-              app.stage.addChild(sprite);
-              const timestamp = epochTimestamp();
-              event_list.push(eventGen(timestamp, "show stim", "start"));
-            });
-          })
+          .then(
+            function () {
+              app.ticker.addOnce(
+                function () {
+                  app.stage.addChild(sprite);
+                  const timestamp = epochTimestamp();
+                  addToEventList(
+                    eventGen(
+                      "show stim",
+                      "start",
+                      timestamp,
+                      this.stim_order_i,
+                      this.stim_set_i,
+                      this.stim_seq_i,
+                    ),
+                  );
+                }.bind(this),
+              );
+            }.bind({ stim_order_i, stim_set_i, stim_seq_i }),
+          )
           .then(delay_ms(stim_info_list[stim_set_i].show_time_ms))
-          .then(event_end("show stim", "end"));
+          .then(
+            event_end("show stim", "end", stim_order_i, stim_set_i, stim_seq_i),
+          );
 
         if (start_config.end_white_ms > 0) {
           my_promise = my_promise
-            .then(() => {
-              app.ticker.addOnce(() => {
-                app.stage.removeChildren();
-                if (show_stim_sequence) {
-                  showPixiText(
-                    `Progress\n${i + 1}/${stim_seq.length}`,
-                    pixi_huge_text,
-                  );
-                }
-                const timestamp = epochTimestamp();
-                event_list.push(eventGen(timestamp, "show post stim", "start"));
-              });
-            })
+            .then(
+              function () {
+                app.ticker.addOnce(
+                  function () {
+                    app.stage.removeChildren();
+                    if (show_stim_sequence) {
+                      showPixiText(
+                        `Progress\n${i + 1}/${stim_seq.length}`,
+                        pixi_huge_text,
+                      );
+                    }
+                    const timestamp = epochTimestamp();
+                    addToEventList(
+                      eventGen(
+                        "show post stim",
+                        "start",
+                        timestamp,
+                        this.stim_order_i,
+                        this.stim_set_i,
+                        this.stim_seq_i,
+                      ),
+                    );
+                  }.bind(this),
+                );
+              }.bind({ stim_order_i, stim_set_i, stim_seq_i }),
+            )
             .then(delay_ms(start_config.end_white_ms))
-            .then(event_end("show post stim", "end"));
+            .then(
+              event_end(
+                "show post stim",
+                "end",
+                stim_order_i,
+                stim_set_i,
+                stim_seq_i,
+              ),
+            );
         }
       }
       return my_promise;
@@ -621,7 +706,14 @@ export async function prepVisStimCtrlPanel(
     if (event.key === "Escape") {
       exitExperiment();
     } else {
-      eventGen(epochTimestamp(), "keydown", event.key);
+      addToEventList(eventGen("keydown", event.key, epochTimestamp()));
+    }
+  }
+
+  function addToEventList(e: StimEvent, verbose = true) {
+    event_list.push(e);
+    if (verbose) {
+      console.log(e);
     }
   }
 
@@ -651,7 +743,7 @@ export async function prepVisStimCtrlPanel(
       `img-card-header-content-${id_num}`,
       setting_div,
       ["h6", "center"],
-      `Set ${id_num + 1}: ${files_arr.length} stimuli`,
+      `Set ${id_num}: ${files_arr.length} stimuli`,
     );
     title_header.setAttribute("style", "margin-right: 20px");
 

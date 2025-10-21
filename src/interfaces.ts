@@ -1,4 +1,4 @@
-import * as PIXI from 'pixi.js';
+import * as PIXI from "pixi.js";
 export interface VisStimConfig {
   start_baseline_s: number;
   start_fixation_ms: number;
@@ -20,20 +20,22 @@ export interface StimulusSetInfo {
   stim_info: StimInfo[];
 }
 
-export type EventDetailType = "Pre-baseline"
-export type EventDetailEvent = "start" | "end"
+export type EventDetailType = "Pre-baseline";
+export type EventDetailEvent = "start" | "end";
 
-export interface EventDetail {
+export interface StimEvent {
   stim_order_i?: number;
   stim_set_num?: number;
   stim_seq_num?: number;
   stim_file_name?: string;
   type?: string;
   event?: string;
-}
-
-export interface StimEvent {
-  event: EventDetail;
-  epoch_time_ms: number;
+  epoch_time_ms?: number;
   send_epoch_time_ms?: number;
 }
+
+// export interface StimEvent {
+//   event: EventDetail;
+//   epoch_time_ms: number;
+//   send_epoch_time_ms?: number;
+// }
