@@ -25,8 +25,8 @@ const defaultConfig: VisStimConfig = {
 };
 
 const DATA_SERVER_PORT = 3200;
-const VISUAL_STIM_PATH = "rorschach_inkblot_vs_genometry";
-const WS_URL = `ws://127.0.0.1:${DATA_SERVER_PORT}/${VISUAL_STIM_PATH}/ws`;
+const VISUAL_STIM_PATH = "image_visual_stim_in";
+const WS_URL = `ws://127.0.0.1:${DATA_SERVER_PORT}/${VISUAL_STIM_PATH}`;
 let socket: WebSocket | undefined;
 const MAX_RECONNECT = 5;
 let reconnect_count = 0;
@@ -420,14 +420,6 @@ export async function prepVisStimCtrlPanel(
           stim_info_list[stim_set_i].stim_info[stim_seq_i].file.name;
       }
     }
-    if (socket?.readyState === WebSocket.OPEN) {
-      setTimeout(() => {
-        if (socket?.readyState === WebSocket.OPEN) {
-          e["send_epoch_time_ms"] = epochTimestamp();
-          socket.send(JSON.stringify(e));
-        }
-      }, 0);
-    }
     return e;
   }
 
@@ -712,6 +704,20 @@ export async function prepVisStimCtrlPanel(
 
   function addToEventList(e: StimEvent, verbose = true) {
     event_list.push(e);
+    console.log(`Socket open: ${socket?.readyState === WebSocket.OPEN}`);
+    if (socket?.readyState === WebSocket.OPEN) {
+      const event = Object.assign({}, e);
+      setTimeout(() => {
+        if (socket?.readyState === WebSocket.OPEN) {
+          console.log(
+            `   Pre send socket open: ${socket?.readyState === WebSocket.OPEN}`,
+          );
+          event.send_epoch_time_ms = epochTimestamp();
+          console.log(event);
+          socket.send(JSON.stringify(event));
+        }
+      }, 0);
+    }
     if (verbose) {
       console.log(e);
     }
